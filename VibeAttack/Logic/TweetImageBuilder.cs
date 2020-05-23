@@ -26,11 +26,8 @@ namespace VibeAttack.Logic
             List<string> mediaLocations = new List<string>();
             mediaPath = HttpContext.Current.Server.MapPath("Image/Unused");
             tmpPath = HttpContext.Current.Server.MapPath("Image/tmp");
-            string image = null;
             //IF TWEET IMAGE
             //IF VIDEO
-            string video = null;
-            string rVideo = null;
             mediaLocations = DownloadMedia(tweet, "media");
 
             string ppURL = tweet.CreatedBy.ProfileImageUrl;
@@ -47,7 +44,6 @@ namespace VibeAttack.Logic
             string rName = null;
             string rUsername = null;
             string rText = null;
-            string rImage = null;
             List<string> rMediaLocations = new List<string>();
             //IF RETWEET
             if (tweet.QuotedTweet != null)
@@ -67,7 +63,7 @@ namespace VibeAttack.Logic
                 rText = retweet.Text;
                 //Text 23px
 
-                rMediaLocations = DownloadMedia(retweet, "rMedia");
+                rMediaLocations = DownloadMedia(retweet, "rImages");
             }
 
             buildImage(username, name, text, tmpPath + "/profilePic.jpg", mediaLocations, rUsername, rName, rText, tmpPath + "/retweetProfilePic.jpg", rMediaLocations);
@@ -98,6 +94,7 @@ namespace VibeAttack.Logic
 
         void buildImage(string username, string name, string text, string ppURL, List<string> mediaLocations, string rUsername, string rName, string rText, string rppURL, List<string> rMediaLocations)
         {
+            int max = 2;
             //TODO
             //Create square with circle in middle to replicate circle profile picture
             //https://twitter.com/jaeraedell/status/1207893313141006336
@@ -112,14 +109,12 @@ namespace VibeAttack.Logic
             SizeF textSize = new SizeF(0, 0);
             SizeF rTextSize = new SizeF(0, 0);   //Size of Normal Text (Retweet)
             SizeF rNameSize = new SizeF(0, 0);
-            List<Image> tMedia = null;
-            List<Image> rMedia = null;
+            List<Image> tImages = new List<Image>();
+            List<Image> rImages = new List<Image>();
             //List<MediaPlayer>
             Image iPP = Image.FromFile(@ppURL);
             Image iRPP = null;
-            float rtImgHeightScale = 0;
-            float tImgHeightScale = 0;
-            float oImgHeight = 139;
+            float oImgHeight = 170;
             Image circlePic = Image.FromFile(path + "/circle-pic.png");
 
             List<float> tImgHeightScales = new List<float>();
@@ -127,6 +122,7 @@ namespace VibeAttack.Logic
             List<float> rImgHeightScales = new List<float>();
             List<float> rImgWidthScales = new List<float>();
 
+            //Find Images from Media List, all with extension .jpg
             //GET SIZE OF OUTPUT IMAGE
             if (text != null)
             {
@@ -135,20 +131,25 @@ namespace VibeAttack.Logic
             }
             if (mediaLocations != null)
             {
-                foreach(string media in mediaLocations)
+                for (int i = 0; i < mediaLocations.Count; i++)
                 {
-                    if(media.Contains(".jpg"))
+                    if (mediaLocations[i].Contains(".jpg"))
                     {
-                        tMedia.Add(Image.FromFile(media));
+                        tImages.Add(Image.FromFile(mediaLocations[i]));
                     }
                 }
-                //2 Images, 
-                //
-                //rows = (int)(Amount / Max) + (Amount % Max)
-                //for each row
-                tImgHeightScale = (568 / (float)tImage.Width) * tImage.Height;
-                oImgHeight += tImgHeightScale;
+                if(tImages.Count != 0)
+                {
+                    List<string> dimensions = CalculateImageDimensions(tImages, max, 568);
+                    for (int i = 0; i < dimensions.Count; i++)
+                    {
+                        tImgHeightScales.Add(float.Parse(dimensions[i].Split('x').ToList()[1]));
+                        tImgWidthScales.Add(float.Parse(dimensions[i].Split('x').ToList()[0]));
+                    }
+                }
+                oImgHeight += CalculateTotalImagesHeight(tImgHeightScales, max);
             }
+            
             if (rUsername != null)   //If a Retweet as well
             {
                 rNameSize = drawing.MeasureString(rName, fBoldNormalText);
@@ -158,11 +159,25 @@ namespace VibeAttack.Logic
                     rTextSize = drawing.MeasureString(rText, fNormalText, 546);
                     oImgHeight += rTextSize.Height;
                 }
-                if (rImage != null)
+                if (rMediaLocations != null)
                 {
-                    rtimg = Image.FromFile(rImage);
-                    rtImgHeightScale = (568 / (float)rtimg.Width) * rtimg.Height;
-                    oImgHeight += rtImgHeightScale;
+                    for (int i = 0; i < rMediaLocations.Count; i++)
+                    {
+                        if (rMediaLocations[i].Contains(".jpg"))
+                        {
+                            rImages.Add(Image.FromFile(rMediaLocations[i]));
+                        }
+                    }
+                    if (rImages.Count != 0)
+                    {
+                        List<string> dimensions = CalculateImageDimensions(rImages, max, 546);
+                        for (int i = 0; i < dimensions.Count; i++)
+                        {
+                            rImgHeightScales.Add(float.Parse(dimensions[i].Split('x').ToList()[1]));
+                            rImgWidthScales.Add(float.Parse(dimensions[i].Split('x').ToList()[0]));
+                        }
+                        oImgHeight += CalculateTotalImagesHeight(rImgHeightScales, max);
+                    }
                 }
             }
 
@@ -188,10 +203,27 @@ namespace VibeAttack.Logic
                 currentHeight += textSize.Height + 20;
             }
             //IF IMAGE
-            if (tImage != null)
+            if (tImages.Count != 0)
             {
-                drawing.DrawImage(tImage, 15, currentHeight, 568, tImgHeightScale);
-                currentHeight += tImgHeightScale + 20;
+                currentHeight = DrawImages(tImages, max, drawing, currentHeight, tImgWidthScales, tImgHeightScales, 15);
+                /*
+                int rows = (int)Math.Ceiling((decimal)tImages.Count / max);
+                int currentImage = 0;
+                for(int i = 0; i < rows; i++)
+                {
+                    //For each row...
+                    float currentWidth = 15;
+                    for (int j = 0; j < max; j++)
+                    {
+                        //For each image in row...
+                        drawing.DrawImage(tImages[currentImage], currentWidth, currentHeight, tImgWidthScales[currentImage], tImgHeightScales[currentImage]);
+                        currentImage++;
+                        currentWidth += tImgWidthScales[currentImage];
+                    }
+                    currentHeight += tImgHeightScales[currentImage - max];
+                }
+                currentHeight += 20;
+                */
             }
             float retweetStart = currentHeight - 10;
             //IF RETWEET
@@ -209,10 +241,9 @@ namespace VibeAttack.Logic
                     currentHeight += (15 + rTextSize.Height);
                 }
                 //IF RETWEET IMAGE
-                if (rImage != null)
+                if (rImages.Count != 0)
                 {
-                    drawing.DrawImage(rtimg, 15, currentHeight, 568, rtImgHeightScale);
-                    currentHeight += rtImgHeightScale;
+                    currentHeight = DrawImages(rImages, max, drawing, currentHeight, rImgWidthScales, rImgHeightScales, 25);
                 }
                 drawing.DrawPath(new Pen(Color.FromArgb(199, 199, 199), 1), RoundedRect(new Rectangle(15, (int)retweetStart,
                     568, ((int)currentHeight - (int)retweetStart)), 5));
@@ -222,16 +253,22 @@ namespace VibeAttack.Logic
             textBrush.Dispose();
             drawing.Dispose();
             circlePic.Dispose();
-            if(tImage != null)
+            if(tImages.Count != 0)
             {
-                tImage.Dispose();
+                foreach(Image img in tImages)
+                {
+                    img.Dispose();
+                }
             }
             if(rUsername != null)
             {
                 iRPP.Dispose();
-                if (rtimg != null)
+                if (rImages.Count != 0)
                 {
-                    rtimg.Dispose();
+                    foreach(Image img in rImages)
+                    {
+                        img.Dispose();
+                    }
                 }
             }
             iPP.Dispose();
@@ -240,113 +277,138 @@ namespace VibeAttack.Logic
             Random rand = new Random();
             oImg.Save("C:/Users/William/source/repos/VibeAttack/VibeAttack/Image/Unused/image1-" + rand.Next(100) + ".png", ImageFormat.Png);
             oImg.Dispose();
-            
-            //Profile Picture
-            //49px x 49px
-            //(15, 10) Pos
-
-            //Display Name
-            //(Width of Name) x 19px
-            //(74, 16)
-
-            //Username 
-            //(Width of Username) x 19px
-            //(74, 35)
-
-            //Text
-            //(Max 568px) x SizeF.H
-            //(15, 69)
-
-            //Retweet Rectangle
-
-            //Retweet PP
-            //20px x 20px
-            //(25, (Height of Text + 109))
-
-            //Retweet Name
-            //(Width of Name) x 19
-            //(50, (Height of Text + 109))
-
-            //Retweet Username
-            //(Width of Name) x 19
-            //((55 + RTName Width), (Height of Text + 109)
-
-            //Retweet Text
-            //(Max 568px) x SifeF.H
-            //(25, (Height of Text + 134)
-
-            //Retweet Image
-            //(Max 568) x Sale to Width
-            //(15, Height of Text + Height of RText + 149)
 
         }
 
+        private float DrawImages(List<Image> images, int max, Graphics drawing, float currentHeight, List<float> widths, List<float> heights, float currentWidth)
+        {
+            float tmpCurrWidth = currentWidth;
+            int rows = (int)Math.Ceiling((decimal)images.Count / max);
+            int currentImage = 0;
+            float itemsLeft = images.Count;
+            for (int i = 0; i < rows; i++)
+            {
+                //For each row...
+                for (int j = 0; j < max; j++)
+                {
+                    //For each image in row...
+                    drawing.DrawImage(images[currentImage], tmpCurrWidth, currentHeight, widths[currentImage], heights[currentImage]);
+                    tmpCurrWidth += widths[currentImage];
+                    currentImage++;
+                    if (currentImage >= images.Count)
+                    {
+                        break;
+                    }
+                }
+                tmpCurrWidth = currentWidth; 
+                currentHeight += heights[i * max];
+            }
+            return currentHeight += 20;
+        }
+
         //Returns a list of the Height OR Width of images
-        private List<string> CalculateImageDimensions(string dimension, List<Image> images, int max, float maxWidth)
+        private List<string> CalculateImageDimensions(List<Image> images, int max, float maxWidth)
         {
             List<string> r = new List<string>();
-            float items = images.Count;
-            int rows = (int)Math.Ceiling(items / max);
+            int items = images.Count;
+            int rows = (int)Math.Ceiling((decimal)items / max);
             int currentImages = 0;
+            //IMPERFECT GRID
             if(items % max != 0)
             {
+                //COMPLETE AND IMCOMPLETE ROWS
                 if(items > max)
                 {
+                    //COMPLETE ROWS
                     for(int i = 0; i < (rows - 1); i++)
                     {
-                        //Find largest image from first 3
                         List<Image> imageRow = new List<Image>();
-                        List<float> scaleFactors = new List<float>();
                         for(int j = currentImages; j < (currentImages + max); j++)
                         {
                             imageRow.Add(images[j]);
                         }
-                        imageRow = imageRow.OrderByDescending(o => o.Height).ToList<Image>();
-                        for(int j = currentImages; j < (currentImages + (max - 1)); j++)
-                        {
-                            scaleFactors.Add(imageRow[currentImages].Height / imageRow[j + 1].Height);
-                        }
-                        List<float> tmpWidth = new List<float>();
-                        List<float> tmpHeight = new List<float>();
-                        for(int j = 0; j < scaleFactors.Count; j++)
-                        {
-                            tmpWidth.Add(imageRow[j + 1].Width * scaleFactors[j]);
-                            tmpHeight.Add(imageRow[j + 1].Height * scaleFactors[j]);
-                        }
-                        float totalWidth = imageRow[0].Width;
-                        for(int j = 0; j < tmpWidth.Count; j++)
-                        {
-                            totalWidth += tmpWidth[j];
-                        }
-                        float scaleFactor = maxWidth / totalWidth;
-                        for(int j = 0; j < imageRow.Count; j++)
-                        {
-                            r.Add((imageRow[j].Width * scaleFactor) + "." +
-                                    (imageRow[j].Height * scaleFactor));
-                        }
+                        r.AddRange(CalcRowImages(imageRow, max, maxWidth));
                         currentImages += max;
                     }
-                    //CHECK IF ABOVE CODE WORKS FOR ONLY COMPLETE ROWS
-                    //IF SO, MAKE A NEW METHOD OUT OF IT TO CALL
-                    //DO INCOMEPLETE ROW
-                    //items - currentImages = remainder
+                    //INCOMPLETE ROW
+                    List<Image> imageRowInc = new List<Image>();
+                    for(int j = currentImages; j < items; j++)
+                    {
+                        imageRowInc.Add(images[j]);
+                    }
+                    r.AddRange(CalcRowImages(imageRowInc, (items - currentImages), maxWidth));
+                }
+                if(items < max)
+                {
+                    List<Image> imageRow = new List<Image>();
+                    for (int j = currentImages; j < items; j++)
+                    {
+                        imageRow.Add(images[j]);
+                    }
+                    r.AddRange(CalcRowImages(imageRow, items, maxWidth));
                 }
             }
-            //if (items % max != 0) //IC
-            //  items > max
-            //      complete rows = rows - 1
-            //          loop through, 
-            //      last row is incomplete 
-            //  items < max
-            //      last row is incomeplete
-            return null;
+            //PERFECT GRID
+            if(items % max == 0)
+            {
+                //COMPLETE ROWS
+                for (int i = 0; i < rows; i++)
+                {
+                    List<Image> imageRow = new List<Image>();
+                    for (int j = currentImages; j < (currentImages + max); j++)
+                    {
+                        imageRow.Add(images[j]);
+                    }
+                    r.AddRange(CalcRowImages(imageRow, max, maxWidth));
+                    currentImages += max;
+                }
+            }
+            return r;
+        }
+
+        private List<string> CalcRowImages(List<Image> imageRow, int max, float maxWidth)
+        {
+            List<string> tmpResults = new List<string>();
+            List<float> scaleFactors = new List<float>();
+            imageRow = imageRow.OrderByDescending(o => o.Height).ToList<Image>();
+            //Scale factor to match tallest image
+            for (int j = 1; j < max; j++)
+            {
+                scaleFactors.Add((float)imageRow[0].Height / (float)imageRow[j].Height);
+            }
+            List<float> tmpWidth = new List<float>();
+            List<float> tmpHeight = new List<float>();
+            //Setting other images dimensions to new scale
+            for (int j = 0; j < scaleFactors.Count; j++)
+            {
+                tmpWidth.Add((float)imageRow[j + 1].Width * scaleFactors[j]);
+                tmpHeight.Add((float)imageRow[j + 1].Height * scaleFactors[j]);
+            }
+            float totalWidth = imageRow[0].Width;
+            for (int j = 0; j < tmpWidth.Count; j++)
+            {
+                totalWidth += tmpWidth[j];
+            }
+            float scaleFactor = maxWidth / totalWidth;
+            tmpResults.Add(((float)imageRow[0].Width * scaleFactor) + "x" +
+                        ((float)imageRow[0].Height * scaleFactor));
+            for (int j = 0; j < tmpWidth.Count; j++)
+            {
+                tmpResults.Add(((float)tmpWidth[j] * scaleFactor) + "x" +
+                        ((float)tmpHeight[j] * scaleFactor));
+            }
+            return tmpResults;
         }
 
         //Returns the extra height of bitmap image needed to fit rows of images
-        private float CalculateTotalImagesHeight(List<float> heights)
+        private float CalculateTotalImagesHeight(List<float> heights, int max)
         {
-
-            return 0;
+            float r = 0;
+            for(int i = 0; i < heights.Count; i += max)
+            {
+                r += heights[i];
+            }
+            return r;
         }
 
         private static GraphicsPath RoundedRect(Rectangle bounds, int radius)
