@@ -50,7 +50,7 @@ textarea {
 }
 
 .sub-heading-index{
-    display: inline-flex;
+    display: block;
 }
 
 .sub-heading-index img {
@@ -63,4 +63,8 @@ textarea {
 
 .heading-index{
     font-size:100px;
+}
+
+.main-center{
+    text-align: center;
 }
