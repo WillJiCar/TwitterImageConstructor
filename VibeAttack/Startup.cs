@@ -3,7 +3,6 @@ using Microsoft.Owin.Cors;
 using Microsoft.Owin;
 using Owin;
 using Tweetinvi;
-using Facebook;
 using Microsoft.Extensions.DependencyInjection;
 using System.Web.Mvc;
 using VibeAttack.App_Start;
@@ -42,8 +41,7 @@ namespace VibeAttack
         {
             services.AddControllersAsServices(typeof(Startup).Assembly.GetExportedTypes()
            .Where(t => !t.IsAbstract && !t.IsGenericTypeDefinition)
-           .Where(t => typeof(IController).IsAssignableFrom(t)
-      ||    t.Name.EndsWith("Controller", StringComparison.OrdinalIgnoreCase)));
+           .Where(t => typeof(IController).IsAssignableFrom(t) || t.Name.EndsWith("Controller", StringComparison.OrdinalIgnoreCase)));
 
         }
 

@@ -1,0 +1,46 @@
+﻿
+@{
+    ViewBag.Title = "Test";
+}
+
+<h2>Test</h2>
+
+<div class="row">
+    <h2>Twitter Screenshot Maker</h2>
+</div>
+
+@model VibeAttack.Models.HomeModel
+@using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    <table>
+        <tr>
+            <td>File:</td>
+            <td><input type="file" name="Files" id="Files" multiple /></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td><input type="submit" name="submit" value="Upload" /></td>
+        </tr>
+    </table>
+}
+
+@using (Html.BeginForm(null, "Tweet", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    <table>
+        <tr>
+            <td>Twitter ID:</td>
+            <td><input type="text" name="TwitterID" id="TwitterID" multiple /></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td><input type="submit" name="submit" value="Upload" /></td>
+        </tr>
+    </table>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Generated Images</h2>
+    </div>
+</div>
+

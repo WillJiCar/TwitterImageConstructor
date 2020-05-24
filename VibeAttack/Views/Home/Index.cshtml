@@ -4,53 +4,18 @@
 
 <div class="row">
     <div class="col-md-12">
-        <h1>VIBE ATTACK.IO</h1>
-        <h2>It's massive</h2>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-12">
-        <div class="vibe-slideshow-wrap">
-            <img src="~/Image/vibe-attack.png"/>
+        <h1 class="heading-index">VIBE ATTACK</h1>
+        <div class="sub-heading-index">
+            <h2>MASSIVE, coming soon</h2>
+            <img src="~/Image/eyes.png"/>
         </div>
+        
     </div>
 </div>
 
-<div class="row">
-    <h2>Twitter Screenshot Maker</h2>
+<div class="center-logo">
+    <img src="~/Image/vibe-attack.png" />
 </div>
 
-@model VibeAttack.Models.HomeModel
-@using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data" }))
-{
-    <table>
-        <tr>
-            <td>File:</td>
-            <td><input type="file" name="Files" id="Files" multiple /></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td><input type="submit" name="submit" value="Upload" /></td>
-        </tr>
-    </table>
-}
-
-@using (Html.BeginForm(null, "Tweet", FormMethod.Post, new { enctype = "multipart/form-data" }))
-{
-    <table>
-        <tr>
-            <td>Twitter ID:</td>
-            <td><input type="text" name="TwitterID" id="TwitterID" multiple /></td>
-        </tr>
-        <tr>
-            <td>&nbsp;</td>
-            <td><input type="submit" name="submit" value="Upload" /></td>
-        </tr>
-    </table>
-}
-
-<div class="row">
-    <div class="col-md-12">
-        <h2>Generated Images</h2>
-    </div>
-</div>
+<!-- Not a fan? [Insert colour slider to change background]
+    Sign up for Mailing List MS98 Style-->

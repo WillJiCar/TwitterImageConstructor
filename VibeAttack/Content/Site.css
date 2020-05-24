@@ -1,6 +1,19 @@
-﻿body {
+﻿/* FONTS */
+@font-face{
+    font-family: padaloma;
+    src: url('Turnpike.ttf');
+}
+
+body {
     padding-top: 50px;
     padding-bottom: 20px;
+    background: #000;
+    color: white;
+}
+
+h1, h2{
+    font-family: 'padaloma';
+    transform: scale(1, 0.8);
 }
 
 /* Set padding to keep content from hitting the edges */
@@ -21,4 +34,33 @@ input,
 select,
 textarea {
     max-width: 280px;
+}
+
+.center-logo img{
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.center-logo {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 0%);
+}
+
+.sub-heading-index{
+    display: inline-flex;
+}
+
+.sub-heading-index img {
+    width: 200px;
+}
+
+.sub-heading-index h2{
+    margin: auto;
+}
+
+.heading-index{
+    font-size:100px;
 }

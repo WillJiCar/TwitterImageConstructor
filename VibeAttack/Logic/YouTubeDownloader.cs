@@ -52,7 +52,7 @@ namespace VibeAttack.Logic
             var audioDownloadLink = "http://www." + HttpContext.Current.Request.Url.Host + "/downloads/temp_audio/" + urlSafeName + ".mp3";
             downloadUrlMP3 = audioDownloadLink;
 
-            RemoveData(new string[] { audioFilePath, videoFilePath });
+            //RemoveData(new string[] { audioFilePath, videoFilePath });
         }
 
         public object GetData()
@@ -177,6 +177,7 @@ namespace VibeAttack.Logic
 
         private void RemoveData(string[] filePaths)
         {
+            /*
             var startTime = TimeSpan.Zero;
             var endTime = TimeSpan.FromMinutes(1);
             System.Timers.Timer once = new System.Timers.Timer(60000);
@@ -184,11 +185,16 @@ namespace VibeAttack.Logic
             {
                 foreach(string filePath in filePaths)
                 {
-                    FileInfo fileInfo = new FileInfo(filePath);
+                    if (File.Exists(filePath))
+                    {
+                        //File.Delete(filePath);
+                    }
+                    
                 }
             };
             once.AutoReset = false;
             once.Start();
+            */
         }
     }
 }
