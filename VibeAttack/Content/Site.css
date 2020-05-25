@@ -4,6 +4,10 @@
     src: url('Turnpike.ttf');
 }
 
+* {
+    font-family: "Arial";
+}
+
 body {
     padding-top: 50px;
     padding-bottom: 20px;
@@ -40,6 +44,7 @@ textarea {
     display: block;
     margin-right: auto;
     margin-left: auto;
+    background: transparent;
 }
 
 .center-logo {
@@ -66,5 +71,9 @@ textarea {
 }
 
 .main-center{
+    text-align: center;
+}
+
+.index {
     text-align: center;
 }
